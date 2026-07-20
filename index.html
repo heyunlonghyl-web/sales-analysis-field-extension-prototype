@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>销量分析（新）- 字段扩展原型</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --brand: #2f8df4;
+      --brand-dark: #1768af;
+      --brand-soft: #edf6ff;
+      --border: #dfe5ec;
+      --border-strong: #cfd7e2;
+      --text: #3d4a5c;
+      --muted: #8b97a8;
+      --page: #f5f7fa;
+      --header: #f7f8fa;
+      --positive: #e5484d;
+      --negative: #17a673;
+      --warning: #d9822b;
+      --shadow: 0 1px 4px rgba(21, 50, 79, 0.09);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--text);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-width: 320px; min-height: 100%; background: var(--page); }
+
+    body { font-size: 12px; }
+
+    button, input, select { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .app-header {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      background: linear-gradient(90deg, #72afea 0%, #337fca 48%, #075999 100%);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      margin-right: 38px;
+      font-size: 20px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 5px solid #fff;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: -5px;
+      width: 10px;
+      height: 5px;
+      border-radius: 1px;
+      background: #fff;
+      box-shadow: 0 9px 0 #fff;
+    }
+
+    .main-nav {
+      display: flex;
+      align-items: stretch;
+      align-self: stretch;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .main-nav a {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 0 13px;
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .main-nav a.active { color: #fff; font-weight: 600; }
+
+    .main-nav a.active::after {
+      content: "";
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 0;
+      height: 3px;
+      background: #fff;
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .header-tools i, .header-tools svg { width: 16px; height: 16px; stroke-width: 1.8; }
+    .header-user { font-weight: 600; }
+
+    .mobile-menu { display: none; }
+
+    .page {
+      min-height: calc(100vh - 54px);
+      padding: 0 10px 42px;
+    }
+
+    .breadcrumb {
+      height: 43px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #8a96a6;
+    }
+
+    .breadcrumb i, .breadcrumb svg { width: 13px; height: 13px; }
+    .breadcrumb strong { color: #283647; }
+
+    .filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 13px;
+    }
+
+    .control {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .control:focus-within { border-color: #6badf3; box-shadow: 0 0 0 2px rgba(47, 141, 244, 0.1); }
+    .control i, .control svg { width: 14px; height: 14px; color: #9ba7b5; flex: 0 0 auto; }
+    .control input { min-width: 0; border: 0; outline: 0; color: inherit; background: transparent; }
+    .control input::placeholder { color: #a8b1be; }
+
+    .date-control { width: 132px; }
+    .date-control input { width: 96px; }
+    input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; width: 0; }
+
+    .search-control { width: 250px; padding-right: 0; }
+    .search-control input { flex: 1; }
+    .search-control .field-divider { width: 1px; align-self: stretch; background: var(--border); }
+    .search-control .sliders { width: 35px; height: 28px; display: grid; place-items: center; }
+
+    .select-wrap { position: relative; min-width: 162px; }
+    .select-wrap.wide { min-width: 248px; }
+    .select-wrap select {
+      width: 100%;
+      height: 30px;
+      padding: 0 32px 0 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      outline: 0;
+      appearance: none;
+      background: #fff;
+      color: #a0a9b5;
+    }
+    .select-wrap select.has-value { color: var(--text); }
+    .select-wrap > i, .select-wrap > svg { position: absolute; right: 9px; top: 8px; width: 14px; height: 14px; color: #a0a9b5; pointer-events: none; }
+
+    .btn {
+      min-width: 38px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 0 11px;
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      background: #fff;
+      color: #4c5969;
+    }
+
+    .btn:hover { border-color: #8fbff1; color: #1976d2; background: #f7fbff; }
+    .btn.primary { border-color: var(--brand); background: var(--brand); color: #fff; }
+    .btn.primary:hover { border-color: #1679e7; background: #1679e7; color: #fff; }
+    .btn i, .btn svg { width: 14px; height: 14px; }
+
+    .table-card {
+      min-height: 708px;
+      padding: 15px 14px 0;
+      border: 1px solid #e3e8ef;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .card-actions {
+      height: 42px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute;
+      z-index: 30;
+      top: 34px;
+      right: 0;
+      min-width: 132px;
+      padding: 4px 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(34, 55, 78, 0.15);
+      display: none;
+    }
+    .dropdown.open .dropdown-menu { display: block; }
+    .dropdown-menu button { width: 100%; height: 32px; padding: 0 12px; border: 0; background: #fff; color: var(--text); text-align: left; }
+    .dropdown-menu button:hover { color: var(--brand); background: #f3f8fe; }
+
+    .table-wrap {
+      position: relative;
+      height: calc(100vh - 286px);
+      min-height: 500px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      scrollbar-color: #b9bec5 #eef1f4;
+      scrollbar-width: thin;
+    }
+
+    table {
+      width: 3580px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      background: #fff;
+    }
+
+    th, td {
+      height: 55px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    th {
+      position: sticky;
+      z-index: 4;
+      top: 0;
+      height: 45px;
+      background: var(--header);
+      color: #435062;
+      font-weight: 600;
+    }
+
+    th.new-column {
+      background: #eef6ff;
+      box-shadow: inset 0 2px 0 #64a7ed;
+    }
+
+    td.new-column { background: rgba(239, 247, 255, 0.42); }
+    tr:hover td { background: #f6faff; }
+    tr:hover td.new-column { background: #edf6ff; }
+    tr.selected td { background: #edf6ff; }
+
+    .sticky-col { position: sticky; z-index: 3; background: #fff; }
+    th.sticky-col { z-index: 7; background: var(--header); }
+    tr:hover .sticky-col, tr.selected .sticky-col { background: #edf6ff; }
+    .col-check { left: 0; width: 34px; padding-left: 7px; padding-right: 5px; }
+    .col-date { left: 34px; width: 92px; }
+    .col-sku { left: 126px; width: 178px; box-shadow: 7px 0 10px -10px rgba(48, 65, 83, 0.8); }
+
+    .table-checkbox { width: 13px; height: 13px; margin: 0; accent-color: var(--brand); }
+
+    .sortable {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-weight: inherit;
+      text-align: left;
+    }
+    .sortable i, .sortable svg { width: 12px; height: 12px; color: #9aa6b5; }
+    .sortable.sorted i, .sortable.sorted svg { color: var(--brand); }
+
+    .sku { color: #33475f; font-variant-numeric: tabular-nums; }
+    .warehouse { line-height: 20px; white-space: normal; }
+    .number { font-variant-numeric: tabular-nums; }
+    .growth.positive { color: var(--positive); }
+    .growth.negative { color: var(--negative); }
+    .growth.zero { color: #8692a2; }
+
+    .trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .trend i, .trend svg { width: 14px; height: 14px; }
+    .trend.up { color: var(--positive); }
+    .trend.down { color: var(--negative); }
+    .trend.stable { color: #6f7c8d; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+    .tag.success { color: #16966b; border-color: #a9dfcc; background: #effaf6; }
+    .tag.danger { color: #d84a4f; border-color: #f0b8bb; background: #fff3f3; }
+    .tag.warning { color: #c47720; border-color: #edcfaa; background: #fff8ec; }
+    .tag.info { color: #277ac8; border-color: #b8d8f5; background: #f0f7fe; }
+    .tag.muted { color: #778395; border-color: #d4dae2; background: #f6f7f9; }
+
+    .operation-lines { line-height: 21px; }
+    .operation-lines span { color: #98a3b1; margin-right: 5px; }
+
+    .empty-state {
+      position: sticky;
+      left: 0;
+      width: calc(100vw - 50px);
+      height: 310px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #9aa5b3;
+    }
+    .empty-state i, .empty-state svg { width: 40px; height: 40px; stroke-width: 1.2; }
+
+    .pagination {
+      height: 53px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 1px;
+      color: #526071;
+    }
+
+    .page-btn {
+      min-width: 29px;
+      height: 29px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      color: #283647;
+    }
+    .page-btn:hover { color: var(--brand); background: #f0f6fd; }
+    .page-btn.active { color: var(--brand); font-weight: 600; }
+    .page-btn:disabled { color: #c0c7d0; cursor: default; background: transparent; }
+    .page-btn i, .page-btn svg { width: 13px; height: 13px; }
+
+    .jump-input { width: 50px; height: 30px; border: 1px solid var(--border-strong); border-radius: 3px; text-align: center; outline: 0; }
+    .page-size { height: 30px; padding: 0 7px; border: 1px solid var(--border-strong); border-radius: 3px; background: #fff; color: var(--text); }
+
+    .footer {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #697688;
+    }
+
+    .feedback {
+      position: fixed;
+      z-index: 20;
+      right: 16px;
+      bottom: 30px;
+      width: 30px;
+      min-height: 61px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 5px 0;
+      border: 0;
+      border-radius: 4px 4px 0 0;
+      background: #29a5dc;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(28, 116, 157, 0.24);
+    }
+    .feedback i, .feedback svg { width: 17px; height: 17px; }
+    .feedback span { width: 1em; line-height: 15px; }
+
+    .toast {
+      position: fixed;
+      z-index: 50;
+      left: 50%;
+      top: 72px;
+      transform: translate(-50%, -14px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 220px;
+      padding: 10px 16px;
+      border-radius: 4px;
+      background: #fff;
+      color: #3f4d5d;
+      box-shadow: 0 8px 28px rgba(37, 55, 75, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: 180ms ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast i, .toast svg { width: 18px; height: 18px; color: #18a779; }
+
+    @media (max-width: 1100px) {
+      .app-header { padding: 0 16px; }
+      .brand { margin-right: 18px; }
+      .main-nav a { padding: 0 9px; }
+      .header-tools i:nth-child(-n+2) { display: none; }
+      .select-wrap.wide { min-width: 220px; }
+      .table-wrap { height: calc(100vh - 325px); }
+    }
+
+    @media (max-width: 760px) {
+      .app-header { height: 50px; padding: 0 12px; }
+      .brand { font-size: 17px; margin-right: auto; }
+      .brand-mark { width: 27px; height: 27px; }
+      .main-nav, .header-tools > i { display: none; }
+      .mobile-menu { display: grid; width: 34px; height: 34px; place-items: center; border: 0; background: transparent; color: #fff; }
+      .mobile-menu i, .mobile-menu svg { width: 19px; height: 19px; }
+      .page { min-height: calc(100vh - 50px); padding: 0 8px 35px; }
+      .breadcrumb { height: 39px; }
+      .filters { gap: 8px; margin-bottom: 10px; }
+      .date-control, .search-control, .select-wrap, .select-wrap.wide { width: calc(50% - 4px); min-width: 0; }
+      .search-control { order: -1; }
+      .table-card { min-height: 610px; padding: 10px 8px 0; }
+      .card-actions { height: 38px; }
+      .table-wrap { height: calc(100vh - 364px); min-height: 390px; }
+      .pagination { justify-content: flex-start; overflow-x: auto; white-space: nowrap; }
+      .pagination .page-extra { display: none; }
+      .feedback { right: 8px; bottom: 18px; }
+    }
+
+    @media (max-width: 480px) {
+      .date-control, .search-control, .select-wrap, .select-wrap.wide { width: 100%; }
+      .filters .btn { flex: 1; }
+      .table-wrap { height: calc(100vh - 490px); }
+      .header-user { max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>等风科技</span></div>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="#">首页</a><a href="#">商品管理</a><a href="#">产品刊登</a><a href="#">订单管理</a>
+      <a href="#">采购管理</a><a href="#">仓储管理</a><a href="#" class="active">数据分析</a><a href="#">财务管理</a><a href="#">物流管理</a>
+    </nav>
+    <div class="header-tools"><i data-lucide="headphones"></i><i data-lucide="bell"></i><i data-lucide="circle-help"></i><i data-lucide="user-round"></i><span class="header-user">dftest-hyl</span></div>
+    <button class="mobile-menu" aria-label="展开导航" title="展开导航"><i data-lucide="menu"></i></button>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb"><span>数据分析</span><i data-lucide="chevron-right"></i><strong>销量分析(新)</strong></div>
+
+    <section class="filters" aria-label="筛选条件">
+      <label class="control date-control"><i data-lucide="calendar-days"></i><input id="dateFilter" type="date" value="2026-07-18" aria-label="日期"></label>
+      <label class="control search-control"><input id="skuSearch" type="search" placeholder="请输入SKU" aria-label="SKU"><i data-lucide="search"></i><span class="field-divider"></span><span class="sliders" title="精确匹配"><i data-lucide="list-filter"></i></span></label>
+      <label class="select-wrap wide"><select id="virtualFilter" aria-label="业务虚拟仓"><option value="">请选择业务虚拟仓</option><option>PH6604-QING by Sea（PH6604-轻小件仓-海运备货）</option><option>US3102-LAX by Air（美西空运仓）</option><option>DE2105-HAM by Sea（德国海运仓）</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap wide"><select id="physicalFilter" aria-label="实体仓"><option value="">请选择实体仓</option><option>PH6604</option><option>US3102</option><option>DE2105</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap wide"><select id="lineFilter" aria-label="业务线"><option value="">请选择业务线</option><option>轻小件</option><option>家居线</option><option>服饰线</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap"><select id="trendFilter" aria-label="增长趋势"><option value="">请选择增长趋势</option><option>持续增长</option><option>波动增长</option><option>稳定</option><option>持续下降</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap"><select id="stockoutFilter" aria-label="缺货状态"><option value="">请选择缺货状态</option><option value="是">缺货</option><option value="否">未缺货</option></select><i data-lucide="chevron-down"></i></label>
+      <button class="btn primary" id="searchBtn"><i data-lucide="search"></i><span>搜索</span></button>
+      <button class="btn" id="resetBtn"><i data-lucide="rotate-ccw"></i><span>重置</span></button>
+    </section>
+
+    <section class="table-card" aria-label="销量分析结果">
+      <div class="card-actions">
+        <div class="dropdown" id="syncDropdown">
+          <button class="btn primary dropdown-trigger"><i data-lucide="refresh-cw"></i><span>同步</span><i data-lucide="chevron-down"></i></button>
+          <div class="dropdown-menu"><button data-action="sync-page">同步当前页</button><button data-action="sync-selected">同步所选</button></div>
+        </div>
+        <div class="dropdown" id="exportDropdown">
+          <button class="btn primary dropdown-trigger"><i data-lucide="download"></i><span>导出</span><i data-lucide="chevron-down"></i></button>
+          <div class="dropdown-menu"><button data-action="export-page">导出当前页</button><button data-action="export-all">导出全部结果</button></div>
+        </div>
+      </div>
+
+      <div class="table-wrap" id="tableWrap">
+        <table aria-label="销量分析表格">
+          <colgroup id="colgroup"></colgroup>
+          <thead><tr id="tableHead"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState"><i data-lucide="inbox"></i><span>暂无符合条件的数据</span></div>
+      </div>
+
+      <div class="pagination">
+        <span id="totalText">共 772166 条</span>
+        <button class="page-btn" id="prevPage" aria-label="上一页" title="上一页"><i data-lucide="chevron-left"></i></button>
+        <button class="page-btn active" data-page="1">1</button>
+        <button class="page-btn" data-page="2">2</button>
+        <button class="page-btn" data-page="3">3</button>
+        <button class="page-btn" data-page="4">4</button>
+        <button class="page-btn" data-page="5">5</button>
+        <button class="page-btn page-extra" data-page="6">6</button>
+        <span class="page-extra">...</span><button class="page-btn page-extra" data-page="7722">7722</button>
+        <button class="page-btn" id="nextPage" aria-label="下一页" title="下一页"><i data-lucide="chevron-right"></i></button>
+        <span class="page-extra">前往</span><input class="jump-input page-extra" id="jumpInput" type="number" min="1" max="7722" value="1" aria-label="跳转页码"><span class="page-extra">页</span>
+        <select class="page-size" id="pageSize" aria-label="每页条数"><option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100" selected>100条/页</option></select>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Copyright © 2026 深圳市等风科技有限责任公司&nbsp;&nbsp;粤ICP备2021174602号</footer>
+  <button class="feedback" id="feedbackBtn" title="意见反馈"><i data-lucide="message-square-text"></i><span>意见反馈</span></button>
+  <div class="toast" id="toast"><i data-lucide="circle-check"></i><span id="toastText">操作成功</span></div>
+
+  <script>
+    const columns = [
+      { key: "check", label: "", width: 34, sticky: "col-check" },
+      { key: "date", label: "日期", width: 92, sticky: "col-date", sortable: true },
+      { key: "sku", label: "SKU", width: 178, sticky: "col-sku", sortable: true },
+      { key: "virtualWarehouse", label: "业务虚拟仓", width: 210 },
+      { key: "warehouseCategory", label: "虚拟仓仓库类别", width: 126, isNew: true, sortable: true },
+      { key: "physicalWarehouse", label: "实体仓", width: 112 },
+      { key: "businessLine", label: "业务线", width: 88 },
+      { key: "growth7", label: "近7天增长率", width: 112, isNew: true, sortable: true },
+      { key: "growth814", label: "近8~14天增长率", width: 128, isNew: true, sortable: true },
+      { key: "growth1521", label: "近15~21天增长率", width: 136, isNew: true, sortable: true },
+      { key: "growth28", label: "近28天增长率", width: 116, isNew: true, sortable: true },
+      { key: "outOfStock", label: "是否缺货", width: 90, isNew: true, sortable: true },
+      { key: "stockoutDays", label: "缺货天数", width: 92, isNew: true, sortable: true },
+      { key: "trend", label: "增长趋势", width: 108 },
+      { key: "sales7", label: "近7天日均销量", width: 118, sortable: true },
+      { key: "sales814", label: "近8~14天日均销量", width: 136, sortable: true },
+      { key: "sales1521", label: "近15~21天日均销量", width: 142, sortable: true },
+      { key: "sales2228", label: "近22~28天日均销量", width: 142, sortable: true },
+      { key: "sales28", label: "近28天日均销量", width: 124, sortable: true },
+      { key: "sales2956", label: "近29~56天日均销量", width: 144, sortable: true },
+      { key: "productStatus", label: "商品状态", width: 94, isNew: true, sortable: true },
+      { key: "activity", label: "活跃度", width: 90, isNew: true, sortable: true },
+      { key: "earliestInbound", label: "最早入库时间", width: 146, isNew: true, sortable: true },
+      { key: "operationTime", label: "操作时间", width: 198 },
+      { key: "operator", label: "操作人", width: 128 }
+    ];
+
+    const seedRows = [
+      ["CJ0104227_Blue", "备货仓", "PH6604", "轻小件", 18.6, 12.4, 8.2, 15.7, "否", 0, "持续增长", 14.3, 12.1, 11.2, 10.8, 12.1, 9.6, "在售", "高", "2025-03-16 09:28"],
+      ["CJ0104590_Pink", "备货仓", "PH6604", "轻小件", -8.3, 5.1, 12.9, 2.6, "是", 3, "波动增长", 8.1, 8.8, 7.9, 7.1, 8.0, 7.8, "在售", "中", "2025-05-08 14:12"],
+      ["CJ0105266_Black", "备货仓", "PH6604", "轻小件", 0, 0, -2.1, -0.7, "否", 0, "稳定", 3.0, 3.0, 3.2, 3.1, 3.1, 3.4, "在售", "低", "2025-08-21 11:05"],
+      ["CJ0107690_B", "备货仓", "PH6604", "轻小件", 33.3, 18.2, 9.5, 24.8, "否", 0, "持续增长", 19.4, 14.6, 12.3, 11.7, 14.5, 9.8, "在售", "高", "2024-12-02 16:36"],
+      ["CJ0107690_C", "备货仓", "PH6604", "轻小件", -21.4, -12.6, -4.5, -15.2, "是", 7, "持续下降", 4.7, 6.0, 6.8, 7.2, 6.2, 8.1, "在售", "中", "2025-01-19 10:45"],
+      ["CJ0107690_E", "备货仓", "PH6604", "轻小件", 6.7, 7.1, 5.9, 6.6, "否", 0, "持续增长", 9.1, 8.5, 7.9, 7.6, 8.3, 7.2, "在售", "中", "2025-01-19 10:48"],
+      ["CJ0107690_I", "备货仓", "PH6604", "轻小件", -4.8, 2.4, 1.2, -0.6, "否", 0, "稳定", 5.7, 6.0, 5.9, 5.8, 5.9, 6.1, "在售", "中", "2025-01-19 10:52"],
+      ["CJ0107690_M", "备货仓", "PH6604", "轻小件", 28.6, 14.3, 8.8, 19.2, "否", 0, "持续增长", 12.9, 10.0, 8.8, 8.2, 10.0, 7.7, "在售", "高", "2025-01-19 11:01"],
+      ["CJ0107690_T", "备货仓", "PH6604", "轻小件", -16.7, -8.3, -3.4, -10.2, "是", 12, "持续下降", 2.9, 4.1, 4.6, 5.0, 4.1, 5.8, "暂停售卖", "低", "2025-01-19 11:08"],
+      ["CJ0274956_Pearl-bow", "备货仓", "PH6604", "轻小件", 45.5, 26.3, 17.6, 36.9, "否", 0, "持续增长", 22.9, 15.7, 12.9, 10.7, 15.6, 8.4, "在售", "高", "2026-02-07 13:20"],
+      ["US0286118_Set-2", "平台仓", "US3102", "家居线", 11.2, 8.4, 4.1, 9.8, "否", 0, "持续增长", 7.9, 7.1, 6.8, 6.5, 7.1, 6.2, "在售", "中", "2025-09-12 08:54"],
+      ["DE0193024_Grey", "海外仓", "DE2105", "服饰线", -32.1, -18.5, -9.7, -24.4, "是", 18, "持续下降", 1.9, 2.8, 3.5, 4.0, 3.1, 5.2, "停售", "低", "2024-11-26 17:40"]
+    ];
+
+    const warehouseMap = {
+      PH6604: "PH6604-QING by Sea（PH6604-轻小件仓-海运备货）",
+      US3102: "US3102-LAX by Air（美西空运仓）",
+      DE2105: "DE2105-HAM by Sea（德国海运仓）"
+    };
+
+    const rows = seedRows.map((r, index) => ({
+      id: index + 1,
+      date: "2026-07-18",
+      sku: r[0],
+      virtualWarehouse: warehouseMap[r[2]],
+      warehouseCategory: r[1],
+      physicalWarehouse: r[2],
+      businessLine: r[3],
+      growth7: r[4], growth814: r[5], growth1521: r[6], growth28: r[7],
+      outOfStock: r[8], stockoutDays: r[9], trend: r[10],
+      sales7: r[11], sales814: r[12], sales1521: r[13], sales2228: r[14], sales28: r[15], sales2956: r[16],
+      productStatus: r[17], activity: r[18], earliestInbound: r[19],
+      operationTime: "2026-07-20 01:00", operator: "系统"
+    }));
+
+    const state = { filteredRows: [...rows], sortKey: "", sortDirection: "asc", currentPage: 1, selected: new Set() };
+    const head = document.getElementById("tableHead");
+    const body = document.getElementById("tableBody");
+    const colgroup = document.getElementById("colgroup");
+    const emptyState = document.getElementById("emptyState");
+
+    columns.forEach(col => {
+      const colEl = document.createElement("col");
+      colEl.style.width = col.width + "px";
+      colgroup.appendChild(colEl);
+
+      const th = document.createElement("th");
+      th.className = [col.sticky ? "sticky-col " + col.sticky : "", col.isNew ? "new-column" : ""].filter(Boolean).join(" ");
+      if (col.key === "check") {
+        th.innerHTML = '<input class="table-checkbox" id="selectAll" type="checkbox" aria-label="全选">';
+      } else if (col.sortable) {
+        th.innerHTML = `<button class="sortable" data-sort="${col.key}"><span>${col.label}</span><i data-lucide="chevrons-up-down"></i></button>`;
+      } else {
+        th.textContent = col.label;
+      }
+      head.appendChild(th);
+    });
+
+    const growthHtml = value => {
+      const cls = value > 0 ? "positive" : value < 0 ? "negative" : "zero";
+      const prefix = value > 0 ? "+" : "";
+      return `<span class="growth ${cls} number">${prefix}${value.toFixed(1)}%</span>`;
+    };
+
+    const tagHtml = (value, type) => `<span class="tag ${type}">${value}</span>`;
+
+    const trendHtml = value => {
+      const configs = {
+        "持续增长": ["trending-up", "up"],
+        "波动增长": ["chart-no-axes-combined", "up"],
+        "持续下降": ["trending-down", "down"],
+        "稳定": ["minus", "stable"]
+      };
+      const config = configs[value] || ["minus", "stable"];
+      return `<span class="trend ${config[1]}"><i data-lucide="${config[0]}"></i>${value}</span>`;
+    };
+
+    function cellHtml(row, col) {
+      const value = row[col.key];
+      if (col.key === "check") return `<input class="table-checkbox row-check" type="checkbox" data-id="${row.id}" ${state.selected.has(row.id) ? "checked" : ""} aria-label="选择 ${row.sku}">`;
+      if (["growth7", "growth814", "growth1521", "growth28"].includes(col.key)) return growthHtml(value);
+      if (col.key.startsWith("sales") || col.key === "stockoutDays") return `<span class="number">${value}</span>`;
+      if (col.key === "trend") return trendHtml(value);
+      if (col.key === "outOfStock") return value === "是" ? tagHtml("是", "danger") : tagHtml("否", "success");
+      if (col.key === "productStatus") {
+        const types = { "在售": "success", "暂停售卖": "warning", "停售": "muted" };
+        return tagHtml(value, types[value] || "info");
+      }
+      if (col.key === "activity") {
+        const types = { "高": "danger", "中": "warning", "低": "muted" };
+        return tagHtml(value, types[value]);
+      }
+      if (col.key === "operationTime") return `<div class="operation-lines"><div><span>创建:</span>${value}</div><div><span>更新:</span>${value}</div></div>`;
+      if (col.key === "operator") return `<div class="operation-lines"><div><span>创建人:</span>${value}</div><div><span>更新人:</span>${value}</div></div>`;
+      if (col.key === "virtualWarehouse") return `<div class="warehouse" title="${value}">${value}</div>`;
+      return String(value);
+    }
+
+    function renderRows() {
+      body.innerHTML = "";
+      emptyState.style.display = state.filteredRows.length ? "none" : "flex";
+      state.filteredRows.forEach(row => {
+        const tr = document.createElement("tr");
+        if (state.selected.has(row.id)) tr.classList.add("selected");
+        columns.forEach(col => {
+          const td = document.createElement("td");
+          td.className = [
+            col.sticky ? "sticky-col " + col.sticky : "",
+            col.isNew ? "new-column" : "",
+            col.key === "sku" ? "sku" : ""
+          ].filter(Boolean).join(" ");
+          td.innerHTML = cellHtml(row, col);
+          if (col.key !== "check") td.title = String(row[col.key] ?? "");
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      document.getElementById("selectAll").checked = state.filteredRows.length > 0 && state.filteredRows.every(row => state.selected.has(row.id));
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function applyFilters() {
+      const sku = document.getElementById("skuSearch").value.trim().toLowerCase();
+      const date = document.getElementById("dateFilter").value;
+      const virtual = document.getElementById("virtualFilter").value;
+      const physical = document.getElementById("physicalFilter").value;
+      const line = document.getElementById("lineFilter").value;
+      const trend = document.getElementById("trendFilter").value;
+      const stockout = document.getElementById("stockoutFilter").value;
+      state.filteredRows = rows.filter(row =>
+        (!sku || row.sku.toLowerCase().includes(sku)) &&
+        (!date || row.date === date) &&
+        (!virtual || row.virtualWarehouse === virtual) &&
+        (!physical || row.physicalWarehouse === physical) &&
+        (!line || row.businessLine === line) &&
+        (!trend || row.trend === trend) &&
+        (!stockout || row.outOfStock === stockout)
+      );
+      if (state.sortKey) sortRows(state.sortKey, false);
+      renderRows();
+      document.getElementById("totalText").textContent = state.filteredRows.length === rows.length ? "共 772166 条" : `共 ${state.filteredRows.length} 条`;
+      showToast(`已筛选出 ${state.filteredRows.length} 条示例数据`);
+    }
+
+    function setSortIcon(button, iconName) {
+      const currentIcon = button.querySelector("i, svg");
+      if (!currentIcon) return;
+      const placeholder = document.createElement("i");
+      placeholder.setAttribute("data-lucide", iconName);
+      currentIcon.replaceWith(placeholder);
+    }
+
+    function sortRows(key, toggle = true) {
+      if (toggle) {
+        state.sortDirection = state.sortKey === key && state.sortDirection === "asc" ? "desc" : "asc";
+        state.sortKey = key;
+      }
+      const direction = state.sortDirection === "asc" ? 1 : -1;
+      state.filteredRows.sort((a, b) => {
+        if (typeof a[key] === "number") return (a[key] - b[key]) * direction;
+        return String(a[key]).localeCompare(String(b[key]), "zh-CN") * direction;
+      });
+      document.querySelectorAll(".sortable").forEach(btn => {
+        btn.classList.toggle("sorted", btn.dataset.sort === key);
+        setSortIcon(btn, btn.dataset.sort === key ? (state.sortDirection === "asc" ? "arrow-up" : "arrow-down") : "chevrons-up-down");
+      });
+      renderRows();
+    }
+
+    function resetFilters() {
+      document.getElementById("dateFilter").value = "2026-07-18";
+      document.getElementById("skuSearch").value = "";
+      ["virtualFilter", "physicalFilter", "lineFilter", "trendFilter", "stockoutFilter"].forEach(id => document.getElementById(id).value = "");
+      document.querySelectorAll("select").forEach(select => select.classList.toggle("has-value", Boolean(select.value)));
+      state.filteredRows = [...rows];
+      state.sortKey = "";
+      state.sortDirection = "asc";
+      state.selected.clear();
+      document.getElementById("totalText").textContent = "共 772166 条";
+      document.querySelectorAll(".sortable").forEach(btn => {
+        btn.classList.remove("sorted");
+        setSortIcon(btn, "chevrons-up-down");
+      });
+      renderRows();
+      showToast("筛选条件已重置");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastText").textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function exportCsv(allRows) {
+      const exportColumns = columns.filter(col => col.key !== "check");
+      const escape = value => `"${String(value).replaceAll('"', '""')}"`;
+      const lines = [exportColumns.map(col => escape(col.label)).join(",")];
+      allRows.forEach(row => lines.push(exportColumns.map(col => escape(row[col.key])).join(",")));
+      const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "销量分析_2026-07-18.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast(`已导出 ${allRows.length} 条示例数据`);
+    }
+
+    document.addEventListener("click", event => {
+      const sortButton = event.target.closest("[data-sort]");
+      if (sortButton) sortRows(sortButton.dataset.sort);
+
+      const trigger = event.target.closest(".dropdown-trigger");
+      if (trigger) {
+        const dropdown = trigger.closest(".dropdown");
+        document.querySelectorAll(".dropdown").forEach(item => { if (item !== dropdown) item.classList.remove("open"); });
+        dropdown.classList.toggle("open");
+        return;
+      }
+      if (!event.target.closest(".dropdown")) document.querySelectorAll(".dropdown").forEach(item => item.classList.remove("open"));
+
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "sync-page") showToast("当前页数据同步完成");
+      if (action === "sync-selected") showToast(state.selected.size ? `已同步 ${state.selected.size} 条数据` : "请先选择需要同步的数据");
+      if (action === "export-page") exportCsv(state.filteredRows);
+      if (action === "export-all") exportCsv(rows);
+      if (action) event.target.closest(".dropdown").classList.remove("open");
+
+      const pageButton = event.target.closest("[data-page]");
+      if (pageButton) setPage(Number(pageButton.dataset.page));
+    });
+
+    body.addEventListener("change", event => {
+      if (!event.target.classList.contains("row-check")) return;
+      const id = Number(event.target.dataset.id);
+      event.target.checked ? state.selected.add(id) : state.selected.delete(id);
+      renderRows();
+    });
+
+    document.getElementById("selectAll").addEventListener("change", event => {
+      state.filteredRows.forEach(row => event.target.checked ? state.selected.add(row.id) : state.selected.delete(row.id));
+      renderRows();
+    });
+
+    function setPage(page, silent = false) {
+      state.currentPage = Math.min(7722, Math.max(1, page));
+      document.querySelectorAll("[data-page]").forEach(btn => btn.classList.toggle("active", Number(btn.dataset.page) === state.currentPage));
+      document.getElementById("jumpInput").value = state.currentPage;
+      document.getElementById("prevPage").disabled = state.currentPage === 1;
+      document.getElementById("nextPage").disabled = state.currentPage === 7722;
+      document.getElementById("tableWrap").scrollTop = 0;
+      if (!silent) showToast(`已切换至第 ${state.currentPage} 页`);
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", applyFilters);
+    document.getElementById("skuSearch").addEventListener("keydown", event => { if (event.key === "Enter") applyFilters(); });
+    document.getElementById("resetBtn").addEventListener("click", resetFilters);
+    document.getElementById("prevPage").addEventListener("click", () => setPage(state.currentPage - 1));
+    document.getElementById("nextPage").addEventListener("click", () => setPage(state.currentPage + 1));
+    document.getElementById("jumpInput").addEventListener("keydown", event => { if (event.key === "Enter") setPage(Number(event.target.value)); });
+    document.getElementById("pageSize").addEventListener("change", event => showToast(`已切换为每页 ${event.target.value} 条`));
+    document.getElementById("feedbackBtn").addEventListener("click", () => showToast("反馈入口已打开"));
+    document.querySelectorAll("select").forEach(select => select.addEventListener("change", () => select.classList.toggle("has-value", Boolean(select.value))));
+    document.querySelectorAll(".main-nav a").forEach(link => link.addEventListener("click", event => event.preventDefault()));
+
+    renderRows();
+    setPage(1, true);
+    if (window.lucide) lucide.createIcons();
+  </script>
+</body>
+</html>
