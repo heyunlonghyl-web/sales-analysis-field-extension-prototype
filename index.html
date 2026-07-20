@@ -254,7 +254,7 @@
     }
 
     table {
-      width: 3580px;
+      width: 3780px;
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
@@ -561,6 +561,8 @@
       { key: "growth814", label: "近8~14天增长率", width: 128, isNew: true, sortable: true },
       { key: "growth1521", label: "近15~21天增长率", width: 136, isNew: true, sortable: true },
       { key: "growth28", label: "近28天增长率", width: 116, isNew: true, sortable: true },
+      { key: "inventory", label: "库存", width: 92, isNew: true, sortable: true },
+      { key: "unshipped", label: "未发货量", width: 100, isNew: true, sortable: true },
       { key: "outOfStock", label: "是否缺货", width: 90, isNew: true, sortable: true },
       { key: "stockoutDays", label: "缺货天数", width: 92, isNew: true, sortable: true },
       { key: "trend", label: "增长趋势", width: 108 },
@@ -598,6 +600,9 @@
       DE2105: "DE2105-HAM by Sea（德国海运仓）"
     };
 
+    const inventoryValues = [126, 0, 54, 203, 0, 88, 67, 142, 0, 315, 96, 0];
+    const unshippedValues = [18, 26, 0, 41, 12, 9, 6, 35, 4, 72, 14, 8];
+
     const rows = seedRows.map((r, index) => ({
       id: index + 1,
       date: "2026-07-18",
@@ -607,6 +612,7 @@
       physicalWarehouse: r[2],
       businessLine: r[3],
       growth7: r[4], growth814: r[5], growth1521: r[6], growth28: r[7],
+      inventory: inventoryValues[index], unshipped: unshippedValues[index],
       outOfStock: r[8], stockoutDays: r[9], trend: r[10],
       sales7: r[11], sales814: r[12], sales1521: r[13], sales2228: r[14], sales28: r[15], sales2956: r[16],
       productStatus: r[17], activity: r[18], earliestInbound: r[19],
@@ -659,7 +665,7 @@
       const value = row[col.key];
       if (col.key === "check") return `<input class="table-checkbox row-check" type="checkbox" data-id="${row.id}" ${state.selected.has(row.id) ? "checked" : ""} aria-label="选择 ${row.sku}">`;
       if (["growth7", "growth814", "growth1521", "growth28"].includes(col.key)) return growthHtml(value);
-      if (col.key.startsWith("sales") || col.key === "stockoutDays") return `<span class="number">${value}</span>`;
+      if (col.key.startsWith("sales") || ["inventory", "unshipped", "stockoutDays"].includes(col.key)) return `<span class="number">${value}</span>`;
       if (col.key === "trend") return trendHtml(value);
       if (col.key === "outOfStock") return value === "是" ? tagHtml("是", "danger") : tagHtml("否", "success");
       if (col.key === "productStatus") {
