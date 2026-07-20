@@ -494,7 +494,7 @@
       <label class="select-wrap"><select id="categoryFilter" aria-label="虚拟仓仓库类别"><option value="">请选择虚拟仓仓库类别</option><option>备货仓</option><option>平台仓</option><option>海外仓</option></select><i data-lucide="chevron-down"></i></label>
       <label class="select-wrap wide"><select id="physicalFilter" aria-label="实体仓"><option value="">请选择实体仓</option><option>PH6604</option><option>US3102</option><option>DE2105</option></select><i data-lucide="chevron-down"></i></label>
       <label class="select-wrap wide"><select id="lineFilter" aria-label="业务线"><option value="">请选择业务线</option><option>轻小件</option><option>家居线</option><option>服饰线</option></select><i data-lucide="chevron-down"></i></label>
-      <label class="select-wrap"><select id="trendFilter" aria-label="增长趋势"><option value="">请选择增长趋势</option><option>周度增长</option><option>波动增长</option><option>稳定</option><option>持续下降</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap"><select id="trendFilter" aria-label="增长趋势"><option value="">请选择增长趋势</option><option>周度增长</option><option>波动增长</option><option>无动销</option><option>持续下降</option></select><i data-lucide="chevron-down"></i></label>
       <label class="select-wrap"><select id="stockoutFilter" aria-label="缺货状态"><option value="">请选择缺货状态</option><option value="是">缺货</option><option value="否">未缺货</option></select><i data-lucide="chevron-down"></i></label>
       <button class="btn primary" id="searchBtn"><i data-lucide="search"></i><span>搜索</span></button>
       <button class="btn" id="resetBtn"><i data-lucide="rotate-ccw"></i><span>重置</span></button>
@@ -576,11 +576,11 @@
     const seedRows = [
       ["CJ0104227_Blue", "备货仓", "PH6604", "轻小件", 18.6, 12.4, 8.2, 15.7, "否", 0, "周度增长", 14.3, 12.1, 11.2, 10.8, 12.1, 9.6, "在售", "高", "2025-03-16 09:28"],
       ["CJ0104590_Pink", "备货仓", "PH6604", "轻小件", -8.3, 5.1, 12.9, 2.6, "是", 3, "波动增长", 8.1, 8.8, 7.9, 7.1, 8.0, 7.8, "在售", "中", "2025-05-08 14:12"],
-      ["CJ0105266_Black", "备货仓", "PH6604", "轻小件", 0, 0, -2.1, -0.7, "否", 0, "稳定", 3.0, 3.0, 3.2, 3.1, 3.1, 3.4, "在售", "低", "2025-08-21 11:05"],
+      ["CJ0105266_Black", "备货仓", "PH6604", "轻小件", 0, 0, -2.1, -0.7, "否", 0, "无动销", 3.0, 3.0, 3.2, 3.1, 3.1, 3.4, "在售", "低", "2025-08-21 11:05"],
       ["CJ0107690_B", "备货仓", "PH6604", "轻小件", 33.3, 18.2, 9.5, 24.8, "否", 0, "周度增长", 19.4, 14.6, 12.3, 11.7, 14.5, 9.8, "在售", "高", "2024-12-02 16:36"],
       ["CJ0107690_C", "备货仓", "PH6604", "轻小件", -21.4, -12.6, -4.5, -15.2, "是", 7, "持续下降", 4.7, 6.0, 6.8, 7.2, 6.2, 8.1, "在售", "中", "2025-01-19 10:45"],
       ["CJ0107690_E", "备货仓", "PH6604", "轻小件", 6.7, 7.1, 5.9, 6.6, "否", 0, "周度增长", 9.1, 8.5, 7.9, 7.6, 8.3, 7.2, "在售", "中", "2025-01-19 10:48"],
-      ["CJ0107690_I", "备货仓", "PH6604", "轻小件", -4.8, 2.4, 1.2, -0.6, "否", 0, "稳定", 5.7, 6.0, 5.9, 5.8, 5.9, 6.1, "在售", "中", "2025-01-19 10:52"],
+      ["CJ0107690_I", "备货仓", "PH6604", "轻小件", -4.8, 2.4, 1.2, -0.6, "否", 0, "无动销", 5.7, 6.0, 5.9, 5.8, 5.9, 6.1, "在售", "中", "2025-01-19 10:52"],
       ["CJ0107690_M", "备货仓", "PH6604", "轻小件", 28.6, 14.3, 8.8, 19.2, "否", 0, "周度增长", 12.9, 10.0, 8.8, 8.2, 10.0, 7.7, "在售", "高", "2025-01-19 11:01"],
       ["CJ0107690_T", "备货仓", "PH6604", "轻小件", -16.7, -8.3, -3.4, -10.2, "是", 12, "持续下降", 2.9, 4.1, 4.6, 5.0, 4.1, 5.8, "暂停售卖", "低", "2025-01-19 11:08"],
       ["CJ0274956_Pearl-bow", "备货仓", "PH6604", "轻小件", 45.5, 26.3, 17.6, 36.9, "否", 0, "周度增长", 22.9, 15.7, 12.9, 10.7, 15.6, 8.4, "在售", "高", "2026-02-07 13:20"],
@@ -649,7 +649,7 @@
         "周度增长": ["trending-up", "up"],
         "波动增长": ["chart-no-axes-combined", "up"],
         "持续下降": ["trending-down", "down"],
-        "稳定": ["minus", "stable"]
+        "无动销": ["minus", "stable"]
       };
       const config = configs[value] || ["minus", "stable"];
       return `<span class="trend ${config[1]}"><i data-lucide="${config[0]}"></i>${value}</span>`;
