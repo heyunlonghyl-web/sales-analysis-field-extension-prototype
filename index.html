@@ -168,13 +168,13 @@
     .date-control input { width: 96px; }
     input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; width: 0; }
 
-    .search-control { width: 250px; padding-right: 0; }
+    .search-control { width: 240px; padding-right: 0; }
     .search-control input { flex: 1; }
     .search-control .field-divider { width: 1px; align-self: stretch; background: var(--border); }
     .search-control .sliders { width: 35px; height: 28px; display: grid; place-items: center; }
 
-    .select-wrap { position: relative; min-width: 162px; }
-    .select-wrap.wide { min-width: 248px; }
+    .select-wrap { position: relative; min-width: 150px; }
+    .select-wrap.wide { min-width: 225px; }
     .select-wrap select {
       width: 100%;
       height: 30px;
@@ -282,14 +282,7 @@
       font-weight: 600;
     }
 
-    th.new-column {
-      background: #eef6ff;
-      box-shadow: inset 0 2px 0 #64a7ed;
-    }
-
-    td.new-column { background: rgba(239, 247, 255, 0.42); }
     tr:hover td { background: #f6faff; }
-    tr:hover td.new-column { background: #edf6ff; }
     tr.selected td { background: #edf6ff; }
 
     .sticky-col { position: sticky; z-index: 3; background: #fff; }
@@ -498,9 +491,10 @@
       <label class="control date-control"><i data-lucide="calendar-days"></i><input id="dateFilter" type="date" value="2026-07-18" aria-label="日期"></label>
       <label class="control search-control"><input id="skuSearch" type="search" placeholder="请输入SKU" aria-label="SKU"><i data-lucide="search"></i><span class="field-divider"></span><span class="sliders" title="精确匹配"><i data-lucide="list-filter"></i></span></label>
       <label class="select-wrap wide"><select id="virtualFilter" aria-label="业务虚拟仓"><option value="">请选择业务虚拟仓</option><option>PH6604-QING by Sea（PH6604-轻小件仓-海运备货）</option><option>US3102-LAX by Air（美西空运仓）</option><option>DE2105-HAM by Sea（德国海运仓）</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap"><select id="categoryFilter" aria-label="虚拟仓仓库类别"><option value="">请选择虚拟仓仓库类别</option><option>备货仓</option><option>平台仓</option><option>海外仓</option></select><i data-lucide="chevron-down"></i></label>
       <label class="select-wrap wide"><select id="physicalFilter" aria-label="实体仓"><option value="">请选择实体仓</option><option>PH6604</option><option>US3102</option><option>DE2105</option></select><i data-lucide="chevron-down"></i></label>
       <label class="select-wrap wide"><select id="lineFilter" aria-label="业务线"><option value="">请选择业务线</option><option>轻小件</option><option>家居线</option><option>服饰线</option></select><i data-lucide="chevron-down"></i></label>
-      <label class="select-wrap"><select id="trendFilter" aria-label="增长趋势"><option value="">请选择增长趋势</option><option>持续增长</option><option>波动增长</option><option>稳定</option><option>持续下降</option></select><i data-lucide="chevron-down"></i></label>
+      <label class="select-wrap"><select id="trendFilter" aria-label="增长趋势"><option value="">请选择增长趋势</option><option>周度增长</option><option>波动增长</option><option>稳定</option><option>持续下降</option></select><i data-lucide="chevron-down"></i></label>
       <label class="select-wrap"><select id="stockoutFilter" aria-label="缺货状态"><option value="">请选择缺货状态</option><option value="是">缺货</option><option value="否">未缺货</option></select><i data-lucide="chevron-down"></i></label>
       <button class="btn primary" id="searchBtn"><i data-lucide="search"></i><span>搜索</span></button>
       <button class="btn" id="resetBtn"><i data-lucide="rotate-ccw"></i><span>重置</span></button>
@@ -580,17 +574,17 @@
     ];
 
     const seedRows = [
-      ["CJ0104227_Blue", "备货仓", "PH6604", "轻小件", 18.6, 12.4, 8.2, 15.7, "否", 0, "持续增长", 14.3, 12.1, 11.2, 10.8, 12.1, 9.6, "在售", "高", "2025-03-16 09:28"],
+      ["CJ0104227_Blue", "备货仓", "PH6604", "轻小件", 18.6, 12.4, 8.2, 15.7, "否", 0, "周度增长", 14.3, 12.1, 11.2, 10.8, 12.1, 9.6, "在售", "高", "2025-03-16 09:28"],
       ["CJ0104590_Pink", "备货仓", "PH6604", "轻小件", -8.3, 5.1, 12.9, 2.6, "是", 3, "波动增长", 8.1, 8.8, 7.9, 7.1, 8.0, 7.8, "在售", "中", "2025-05-08 14:12"],
       ["CJ0105266_Black", "备货仓", "PH6604", "轻小件", 0, 0, -2.1, -0.7, "否", 0, "稳定", 3.0, 3.0, 3.2, 3.1, 3.1, 3.4, "在售", "低", "2025-08-21 11:05"],
-      ["CJ0107690_B", "备货仓", "PH6604", "轻小件", 33.3, 18.2, 9.5, 24.8, "否", 0, "持续增长", 19.4, 14.6, 12.3, 11.7, 14.5, 9.8, "在售", "高", "2024-12-02 16:36"],
+      ["CJ0107690_B", "备货仓", "PH6604", "轻小件", 33.3, 18.2, 9.5, 24.8, "否", 0, "周度增长", 19.4, 14.6, 12.3, 11.7, 14.5, 9.8, "在售", "高", "2024-12-02 16:36"],
       ["CJ0107690_C", "备货仓", "PH6604", "轻小件", -21.4, -12.6, -4.5, -15.2, "是", 7, "持续下降", 4.7, 6.0, 6.8, 7.2, 6.2, 8.1, "在售", "中", "2025-01-19 10:45"],
-      ["CJ0107690_E", "备货仓", "PH6604", "轻小件", 6.7, 7.1, 5.9, 6.6, "否", 0, "持续增长", 9.1, 8.5, 7.9, 7.6, 8.3, 7.2, "在售", "中", "2025-01-19 10:48"],
+      ["CJ0107690_E", "备货仓", "PH6604", "轻小件", 6.7, 7.1, 5.9, 6.6, "否", 0, "周度增长", 9.1, 8.5, 7.9, 7.6, 8.3, 7.2, "在售", "中", "2025-01-19 10:48"],
       ["CJ0107690_I", "备货仓", "PH6604", "轻小件", -4.8, 2.4, 1.2, -0.6, "否", 0, "稳定", 5.7, 6.0, 5.9, 5.8, 5.9, 6.1, "在售", "中", "2025-01-19 10:52"],
-      ["CJ0107690_M", "备货仓", "PH6604", "轻小件", 28.6, 14.3, 8.8, 19.2, "否", 0, "持续增长", 12.9, 10.0, 8.8, 8.2, 10.0, 7.7, "在售", "高", "2025-01-19 11:01"],
+      ["CJ0107690_M", "备货仓", "PH6604", "轻小件", 28.6, 14.3, 8.8, 19.2, "否", 0, "周度增长", 12.9, 10.0, 8.8, 8.2, 10.0, 7.7, "在售", "高", "2025-01-19 11:01"],
       ["CJ0107690_T", "备货仓", "PH6604", "轻小件", -16.7, -8.3, -3.4, -10.2, "是", 12, "持续下降", 2.9, 4.1, 4.6, 5.0, 4.1, 5.8, "暂停售卖", "低", "2025-01-19 11:08"],
-      ["CJ0274956_Pearl-bow", "备货仓", "PH6604", "轻小件", 45.5, 26.3, 17.6, 36.9, "否", 0, "持续增长", 22.9, 15.7, 12.9, 10.7, 15.6, 8.4, "在售", "高", "2026-02-07 13:20"],
-      ["US0286118_Set-2", "平台仓", "US3102", "家居线", 11.2, 8.4, 4.1, 9.8, "否", 0, "持续增长", 7.9, 7.1, 6.8, 6.5, 7.1, 6.2, "在售", "中", "2025-09-12 08:54"],
+      ["CJ0274956_Pearl-bow", "备货仓", "PH6604", "轻小件", 45.5, 26.3, 17.6, 36.9, "否", 0, "周度增长", 22.9, 15.7, 12.9, 10.7, 15.6, 8.4, "在售", "高", "2026-02-07 13:20"],
+      ["US0286118_Set-2", "平台仓", "US3102", "家居线", 11.2, 8.4, 4.1, 9.8, "否", 0, "周度增长", 7.9, 7.1, 6.8, 6.5, 7.1, 6.2, "在售", "中", "2025-09-12 08:54"],
       ["DE0193024_Grey", "海外仓", "DE2105", "服饰线", -32.1, -18.5, -9.7, -24.4, "是", 18, "持续下降", 1.9, 2.8, 3.5, 4.0, 3.1, 5.2, "停售", "低", "2024-11-26 17:40"]
     ];
 
@@ -652,7 +646,7 @@
 
     const trendHtml = value => {
       const configs = {
-        "持续增长": ["trending-up", "up"],
+        "周度增长": ["trending-up", "up"],
         "波动增长": ["chart-no-axes-combined", "up"],
         "持续下降": ["trending-down", "down"],
         "稳定": ["minus", "stable"]
@@ -709,6 +703,7 @@
       const sku = document.getElementById("skuSearch").value.trim().toLowerCase();
       const date = document.getElementById("dateFilter").value;
       const virtual = document.getElementById("virtualFilter").value;
+      const category = document.getElementById("categoryFilter").value;
       const physical = document.getElementById("physicalFilter").value;
       const line = document.getElementById("lineFilter").value;
       const trend = document.getElementById("trendFilter").value;
@@ -717,6 +712,7 @@
         (!sku || row.sku.toLowerCase().includes(sku)) &&
         (!date || row.date === date) &&
         (!virtual || row.virtualWarehouse === virtual) &&
+        (!category || row.warehouseCategory === category) &&
         (!physical || row.physicalWarehouse === physical) &&
         (!line || row.businessLine === line) &&
         (!trend || row.trend === trend) &&
@@ -756,7 +752,7 @@
     function resetFilters() {
       document.getElementById("dateFilter").value = "2026-07-18";
       document.getElementById("skuSearch").value = "";
-      ["virtualFilter", "physicalFilter", "lineFilter", "trendFilter", "stockoutFilter"].forEach(id => document.getElementById(id).value = "");
+      ["virtualFilter", "categoryFilter", "physicalFilter", "lineFilter", "trendFilter", "stockoutFilter"].forEach(id => document.getElementById(id).value = "");
       document.querySelectorAll("select").forEach(select => select.classList.toggle("has-value", Boolean(select.value)));
       state.filteredRows = [...rows];
       state.sortKey = "";
